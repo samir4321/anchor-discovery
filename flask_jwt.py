@@ -77,6 +77,7 @@ def get_admin_records():
     current_user = get_jwt_identity()
     if current_user != 'admin':
         return jsonify(err='unauthorized'), 403
+    admin_db_q()
     return jsonify(records=ADMIN_DATABASE), 200
 
 
@@ -85,7 +86,16 @@ def get_admin_records():
 def user_record(id):
     current_user = get_jwt_identity()
     user_record = USER_DATABASE.get(current_user)
+    user_record_q(current_user)
     return jsonify(user_record=user_record), 200
+
+
+def user_record_q(user):
+    print(f'SELECT * FROM USER_DATABASE WHERE user={user}')
+
+
+def admin_db_q():
+    print(f'SELECT * FROM ADMIN_DATABASE')
 
 
 if __name__ == '__main__':
