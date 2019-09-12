@@ -61,7 +61,10 @@ def protected():
     # Access the identity of the current user with get_jwt_identity
     current_user = get_jwt_identity()
     token = get_access_token()
-    resp = jsonify(logged_in_as=current_user)
+    if current_user == 'admin':
+        resp = jsonify(msg="welcome admin")
+    else:
+        resp = jsonify(msg="welcome user")
     return resp, 200
 
 
@@ -97,7 +100,6 @@ def user_record():
     current_user = get_jwt_identity()
     user_record = USER_DATABASE.get(current_user)
     user_record_q(current_user)
-    token = get_access_token()
     resp = jsonify(user_record=user_record)
     return resp, 200
 
