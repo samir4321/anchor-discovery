@@ -6,7 +6,6 @@ from flask_jwt_extended import (
 import time
 
 app = Flask(__name__)
-
 # Setup the Flask-JWT-Extended extension
 app.config['JWT_SECRET_KEY'] = 'super-secret'  # Change this!
 jwt = JWTManager(app)
@@ -14,6 +13,7 @@ jwt = JWTManager(app)
 
 NORMAL_USERS = ['bob', 'alice']
 USERS = NORMAL_USERS + ['admin']
+
 
 ADMIN_DATABASE = {
     'bob': 'came in last thursday',
@@ -24,8 +24,6 @@ USER_DATABASE = {
     'bob': 'bobs stuff',
     'alice': 'alices stuff'
 }
-
-GLOBAL_LOG = {}
 
 
 # Provide a method to create access tokens. The create_access_token()
@@ -51,9 +49,8 @@ def login():
 
     # Identity can be any data that is json serializable
     access_token = create_access_token(identity=username)
-    current_milli_time = lambda: int(round(time.time() * 1000))
-    GLOBAL_LOG[access_token] = { "login_time": current_milli_time, "endpoints": [] }
-    return jsonify(access_token=access_token), 200
+    resp = jsonify(access_token=access_token)
+    return resp, 200
 
 
 # Protect a view with jwt_required, which requires a valid access token
@@ -63,7 +60,9 @@ def login():
 def protected():
     # Access the identity of the current user with get_jwt_identity
     current_user = get_jwt_identity()
-    return jsonify(logged_in_as=current_user), 200
+    token = get_access_token()
+    resp = jsonify(logged_in_as=current_user)
+    return resp, 200
 
 
 def get_access_token():
@@ -74,9 +73,12 @@ def get_access_token():
 @jwt_required
 def get_all_users():
     current_user = get_jwt_identity()
+    token = get_access_token()
     if current_user != 'admin':
-        return jsonify(err='unauthorized'), 403
-    return jsonify(users=USERS), 200
+        resp = jsonify(err='unauthorized')
+        return resp, 403
+    resp = jsonify(users=USERS)
+    return resp, 200
 
 
 @app.route('/records', methods=['GET'])
@@ -95,41 +97,40 @@ def user_record():
     current_user = get_jwt_identity()
     user_record = USER_DATABASE.get(current_user)
     user_record_q(current_user)
-    return jsonify(user_record=user_record), 200
+    token = get_access_token()
+    resp = jsonify(user_record=user_record)
+    return resp, 200
+
+@app.after_request
+def after_request(response):
+    run_log(request, response)
+    return response
+
+def run_log(request, response):
+    access_token = ""
+    if request.headers.has_key("Authorization"):
+        access_token = request.headers.get("Authorization").split("Bearer")[1].strip()
+    status_code = response.status_code
+    resp = response.get_json()
+    app.logger.debug({ "token": access_token, "resp": resp, "resp_code": status_code})
 
 
 def user_record_q(user):
     q = f'SELECT * FROM USER_DATABASE WHERE user={user}'
-    print(q)
     nrecords_accessed = 1
     return q, nrecords_accessed
 
 
 def admin_db_q():
     q = f'SELECT * FROM ADMIN_DATABASE'
-    print(q)
     nrecords_accessed = 200
     return q, nrecords_accessed
 
 
-@app.after_request
-def after(response):
-    # todo with response
-    # print('HTTP response')
-    # print(response.status)
-    # print(response.headers)
-    # print(response.get_data())
-    return response
 
-
-@app.before_request
-def before():
-    # todo with request
-    # e.g. print request.headers
-    # print(f'req headers: \n\t{request.headers}')
-    # print(f'req data: \n\t{request.get_data()}')
-    pass
 
 
 if __name__ == '__main__':
+    import logging
+    logging.basicConfig(filename="server.log", level=logging.DEBUG)
     app.run(host='0.0.0.0', port=8080)
