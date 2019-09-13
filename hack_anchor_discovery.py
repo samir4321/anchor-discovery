@@ -37,6 +37,8 @@ def hack_anchor_discovery():
     # compute conditional counts
     resp_d = resp_obj_cond_counts(sessions)  # count (w|hash)
     flow_hash_d = flow_hash_obj_cond_counts(sessions)  # count(hash|w)
+    num_flow_groups = len(resp_d)
+    print(f"{num_flow_groups} distinct user flow groups found.\n")
     anchor = find_anchor(resp_d, flow_hash_d)
     print(f"Anchor endpoint and response key found: \n{anchor}")
 
