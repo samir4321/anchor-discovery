@@ -2,7 +2,7 @@
 anchor discovery
 ----
 
-
+Discover an endpoint indicating the role of the user by using the information provided by grouping user flows. This information is based on the assumption that the role can be assumed fixed within a given 'user behavior group'
 
 **hack anchor discovery**
 
