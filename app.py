@@ -17,7 +17,7 @@ USERS = NORMAL_USERS + ['admin']
 
 ADMIN_DATABASE = {
     'bob': 'came in last thursday',
-    'alice': "hasn't been seen in a while",
+    'alice': "hasnt been seen in a while",
 }
 
 USER_DATABASE = {
@@ -114,6 +114,7 @@ def run_log(request, response):
         access_token = request.headers.get("Authorization").split("Bearer")[1].strip()
     status_code = response.status_code
     resp = response.get_json()
+    app.logger.info("\n")
     app.logger.debug({ "token": access_token, "resp": resp, "resp_code": status_code})
 
 
