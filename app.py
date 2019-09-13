@@ -3,7 +3,7 @@ from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
     get_jwt_identity
 )
-import time
+
 
 app = Flask(__name__)
 # Setup the Flask-JWT-Extended extension
@@ -37,9 +37,6 @@ def login():
     username = request.json.get('username', None)
     password = request.json.get('password', None)
 
-    if username == 'admin':
-        access_token = create_access_token(identity=username)
-        return jsonify(access_token=access_token), 200
     if not username:
         return jsonify({"msg": "Missing username parameter"}), 400
     if not password:
@@ -60,7 +57,6 @@ def login():
 def protected():
     # Access the identity of the current user with get_jwt_identity
     current_user = get_jwt_identity()
-    token = get_access_token()
     if current_user == 'admin':
         resp = jsonify(msg="welcome admin")
     else:
@@ -76,7 +72,6 @@ def get_access_token():
 @jwt_required
 def get_all_users():
     current_user = get_jwt_identity()
-    token = get_access_token()
     if current_user != 'admin':
         resp = jsonify(err='unauthorized')
         return resp, 403
@@ -110,12 +105,13 @@ def after_request(response):
 
 def run_log(request, response):
     access_token = ""
+    url = request.url
     if request.headers.has_key("Authorization"):
         access_token = request.headers.get("Authorization").split("Bearer")[1].strip()
     status_code = response.status_code
     resp = response.get_json()
     app.logger.info("\n")
-    app.logger.debug({ "token": access_token, "resp": resp, "resp_code": status_code})
+    app.logger.debug({"token": access_token, "url": url, "resp": resp, "resp_code": status_code})
 
 
 def user_record_q(user):
@@ -128,8 +124,6 @@ def admin_db_q():
     q = f'SELECT * FROM ADMIN_DATABASE'
     nrecords_accessed = 200
     return q, nrecords_accessed
-
-
 
 
 

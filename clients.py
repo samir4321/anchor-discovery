@@ -65,12 +65,13 @@ def run_login(login_payload):
     except:
         return None, resp.status_code
 
-p = multiprocessing.Pool(processes=multiprocessing.cpu_count() - 1)
-p.map_async(run, range(100))
-p.close()
-p.join()
+def run_all_clients():
+    p = multiprocessing.Pool(processes=multiprocessing.cpu_count() - 1)
+    p.map_async(run, range(100))
+    p.close()
+    p.join()
 
 
-
+run_all_clients()
 
 
